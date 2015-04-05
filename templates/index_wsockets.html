@@ -1,0 +1,75 @@
+<html>
+    <head>
+        <title>Flask SocketIO Example</title>
+        <script type="text/javascript" src="./static/js/vendor/socket.io.0.9.16.min.js"></script>
+        <script src="./static/js/vendor/jquery.2.1.3.min.js"></script>
+        <script type="text/javascript" charset="utf-8">
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            /*Used to write to the top "logarea" used with the Start/Stop buttons at the top of the page*/
+            //tell the server that we want to start listening (start the job)
+            function start_listening(){
+                $('#startbtn').prop("disabled",true);  //we only want to allow 1 thread
+                $('#stopbtn').prop("disabled",false);  //we only want to allow 1 thread
+                socket.emit('send_startlisten', {message : 'super awesome message'});
+            }
+            //tell the server we want to stop listening (stop the job)
+            function stop_listening(){
+                $('#startbtn').prop("disabled",false);
+                $('#stopbtn').prop("disabled",true);
+                socket.emit('send_stoplisten', {message : 'super awesome message'});
+            }
+            //log responses emitted by server
+            socket.on('newlogentry', function(data){
+                $('#logarea').append('<p>'+data.logentry+'</p>');
+            });
+
+            /*Used by the echo textbox in the bottom section of the page*/
+            //
+            function send(){
+                socket.emit('send_message', {message : $('form textarea').val()});
+            }
+           //received an "echo" message from the server
+            socket.on('echo', function(data){
+                $('#response').append('<p>'+data.echo+'</p>');
+            });
+
+            /*Page*/
+            //disable the "stop" button when the page loads
+            function page_load(){
+                $('#stopbtn').prop("disabled",true);
+            }
+        </script>
+        <style>
+            div{
+                position: relative;
+                margin-left: auto;
+                margin-right: auto;
+                width: 400px;
+            }
+            textarea{
+                width: 100%;
+                height: 100px;
+            }
+        </style>
+    </head>
+    <body onload='page_load()'>
+        <div class="input">
+            <button type="button" id="startbtn" onclick="start_listening(); return false;">Start Listening</button>
+            <button type="button" id="stopbtn" onclick="stop_listening(); return false;">Stop Listening</button>
+        </div>
+        <div id="logarea" border="1">
+
+        </div>
+
+        <br/>
+
+        <div class="input">
+            <form>
+                <textarea placeholder="Send a message to the server to be echoed back..."></textarea>
+                <button type="button" onclick="send(); return false;">Send</button>
+            </form>
+        </div>
+        <div id="response">
+        </div>
+    </body>
+</html>
